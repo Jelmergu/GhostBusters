@@ -1,82 +1,126 @@
-// Do not touch v
-function getGhostInfoMatches(present, notPresent) {
-    return Object.values(
-        _.pickBy(
-            _.omitBy(ghostInfos, (ghost) =>
-                ghost.evidences.some((r) => notPresent.indexOf(r) >= 0)
-            ),
-            (ghost) => present.every((r) => ghost.evidences.indexOf(r) >= 0)
-        )
-    );
-}
+let foundEvidences = [];
+let disabledEvidences = [];
+let eliminatedEvidences = [];
 
-function getRemainingEvidenceIds(present, notPresent) {
-    return _.difference(
-        _.flatMap(
-            getGhostInfoMatches(present, notPresent),
-            (gi) => gi.evidences
-        ),
-        present
-    );
-}
+function displayGhosts(ghosts) {
+    let ghostContainer = document.getElementById("possibleGhosts");
 
-// Do not touch ^
-let evidenceArray = [];
-
-function toggleEvidence(evidence) {
-    // console.clear();
-    // if that evidence doesn't exist in the array (-1)
-    if (evidenceArray.indexOf(evidence) === -1) {
-        evidenceArray.push(evidence);
-    } else {
-        evidenceArray.splice(evidenceArray.indexOf(evidence), 1);
+    if (ghosts.length === ghostInfos.length) {
+        ghostContainer.innerHTML = defaultText;
+        return;
     }
+    ghostContainer.innerHTML = "";
+    ghosts.forEach(ghost => ghostContainer.innerHTML += "<li>" + ghost.name + "</li> <p>" + ghost.description);
+}
 
-    // get ghost matches according to entered evidence
-    document.getElementById("possibleGhosts").innerHTML = "";
+function getGhostsWithEvidence() {
+    return ghostInfos
+        .filter(ghost => foundEvidences.length === 0 ? true : foundEvidences.every(evidence => ghost.evidences.indexOf(evidence) > -1))
+        .filter(ghost => disabledEvidences.length > 0 ? disabledEvidences.every(evidence => ghost.evidences.indexOf(evidence) === -1) : true);
+}
 
-    getGhostInfoMatches(evidenceArray, []).forEach((ghostInfo) => {
-        // getGhostMatches([foundEvidence], [missingEvidence])
-        document.getElementById("possibleGhosts").innerHTML +=
-            "<li>" + ghostInfo.name + "</li> <p>" + ghostInfo.description;
+function update() {
+    let ghosts = getGhostsWithEvidence();
+    displayGhosts(ghosts);
+    let evidences = ghosts.flatMap(g => g.evidences).unique();
+    evidences = evidenceTypes.differenceKeys(evidences);
+    eliminateEvidences(evidences);
+}
+
+/**
+ * This piece of evidence was found
+ * @param evidence
+ */
+function checkEvidence(evidence) {
+    if (foundEvidences.indexOf(evidence) !== -1 || disabledEvidences.indexOf(evidence) !== -1) {
+        document.getElementById(evidenceTypes[evidence].id).classList.remove("checked");
+        foundEvidences.removeValues(evidence);
+        return disableEvidence(evidence);
+    }
+    foundEvidences.push(evidence);
+
+    document.getElementById(evidenceTypes[evidence].id).classList.add("checked");
+    update();
+}
+
+/**
+ * End of the evidence toggle loop
+ * @param evidence
+ */
+function uncheckEvidence(evidence) {
+    update();
+}
+
+/**
+ * This piece of evidence has been searched for, but not found
+ *
+ * @param evidence
+ */
+function disableEvidence(evidence) {
+    if (disabledEvidences.indexOf(evidence) !== -1) {
+        document.getElementById(evidenceTypes[evidence].id).classList.remove("disabled");
+        disabledEvidences.removeValues(evidence);
+        return uncheckEvidence(evidence);
+    }
+    disabledEvidences.push(evidence);
+    document.getElementById(evidenceTypes[evidence].id).classList.add("disabled");
+    update();
+}
+
+/**
+ * This piece of evidence cannot be found in combination with the other evidences
+ *
+ * @param evidences
+ */
+function eliminateEvidences(evidences) {
+    evidenceTypes.forEach(e => document.getElementById(e.id).classList.remove("eliminated"));
+    eliminatedEvidences = [];
+    evidences.forEach((e, k) => {
+        if (disabledEvidences.indexOf(k) === -1) {
+            document.getElementById(e.id).classList.add("eliminated")
+            eliminatedEvidences.push(k);
+        }
     });
-
-    if (evidenceArray.length == 0) {
-        document.getElementById("possibleGhosts").innerHTML =
-            "<br /><p>We need tangible evidence. I should check rooms with an EMF reader for activity, or a thermometer for sub-zero temperatures.</p>";
-    }
-
-    let remainingEvidence = getRemainingEvidenceIds(evidenceArray, []);
-    evidenceTypes.forEach((value, i) => {
-        if (evidenceArray.indexOf(i) >= 0)
-            setState(i, 2);
-        else if (remainingEvidence.indexOf(i) < 0)
-            setState(i, 3);
-        else
-            setState(i, 1);
-    });
-}
-
-function setState(evidenceKey, state) {
-    let classList = document.getElementById(evidenceTypes[evidenceKey].id).classList;
-    switch (state) {
-        case 1: // open
-        default:
-            classList.remove("checked");
-            classList.remove("disabled");
-            break;
-        case 2: //checked
-            classList.add("checked");
-            classList.remove("disabled");
-            break;
-        case 3: // disabled
-            classList.remove("checked");
-            classList.add("disabled");
-            break;
-    }
 }
 
 function resetEvidence() {
-    evidenceArray = [];
-    evidenceTypes.forEach((_, i) => setState(i, 1));
+    foundEvidences = [];
+    disabledEvidences = [];
+    eliminatedEvidences = []
+
+    evidenceTypes.forEach(
+        (_, i) => document.getElementById(evidenceTypes[i].id).classList.forEach(
+            v => document.getElementById(evidenceTypes[i].id).classList.remove(v)
+        )
+    );
+    document.getElementById("possibleGhosts").innerHTML = defaultText;
+}
+
+Array.prototype.differenceKeys = function (keys) {
+    let result = [];
+    this.forEach((v, i) => {
+        if (keys.indexOf(i) === -1) {
+            result[i] = v;
+        }
+    });
+    return result;
+}
+
+Array.prototype.unique = function () {
+    return this.filter((e, i, a) => !(a.indexOf(e) < i) || a.indexOf(e) === -1);
+}
+
+Array.prototype.mergeUnique = function (b) {
+    b.filter(x => this.indexOf(x) === -1)
+        .forEach(x => this.push(x));
+}
+
+Array.prototype.removeValues = function (index) {
+    while (this.indexOf(index) > -1) {
+        this.splice(this.indexOf(index), 1);
+    }
+}
+
+Array.prototype.remove = function (index) {
+    this.splice(index, 1);
 }

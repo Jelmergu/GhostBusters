@@ -6,6 +6,8 @@
 // 5 = Freezing Temperatures
 // 6 = D.O.T.S Projector
 
+const defaultText = "<br /><p>We need tangible evidence. I should check rooms with an EMF reader for activity, or a thermometer for sub-zero temperatures.</p>";
+
 const evidenceTypes = [
     { // 0
         name: "EMF Level 5",

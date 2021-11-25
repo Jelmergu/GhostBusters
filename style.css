@@ -88,10 +88,15 @@ body {
     font-size: 2em;
     list-style-image: url("images/unchecked.png");
 }
-#evidence li.checked {
+#evidence li.checked { /* When the evidence is found, will be used to determine the ghost*/
     list-style-image: url("images/checked.png");
 }
-#evidence li.disabled {
+#evidence li.eliminated { /* When a combination of evidences results in an other piece of evidence not being possible */
+    color: rgb(180, 180, 180);
     text-decoration-line: line-through;
-    text-decoration-width: 10px ;
+    text-decoration-width: 10px;
+}
+#evidence li.disabled { /* When the evidence is manually disabled*/
+    text-decoration-line: line-through;
+    text-decoration-width: 10px;
 }

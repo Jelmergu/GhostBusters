@@ -72,7 +72,7 @@
 <script>
     let evidenceElement = document.querySelector("#evidence ul");
     evidenceTypes.forEach((element, index) =>
-        evidenceElement.innerHTML+= "<li onClick=\"toggleEvidence("+index+")\" id=\""+element.id+"\">"+element.name+"</li>"
+        evidenceElement.innerHTML+= "<li onClick=\"checkEvidence("+index+")\" id=\""+element.id+"\">"+element.name+"</li>"
     );
 </script>
 </body>
