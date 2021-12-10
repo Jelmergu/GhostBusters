@@ -160,4 +160,10 @@ const ghostInfos = [
         description:
             "<b>EMF Level 5 + Fingerprints + Orbs</b><br />Rarely leaves traces on interaction<br /><span class='weakness'>Might shapeshift leaving behind unique evidence</span>"
     },
+    {
+        name: "Mimic",
+        evidences: [1, 2,5],
+        description:
+            "<b>Spirit Box + Fingerprints + Freezing temps</b><br />'Unsure what this ghost is capable of' mirrors traits of other ghosts<br /><span class='weakness'>Ghost orbs around the ghost itself</span>"
+    },
 ];
